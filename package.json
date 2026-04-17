@@ -1,5 +1,31 @@
 {
+  "name": "library-api",
+  "version": "1.0.0",
+  "description": "Primedev intermediate class back-end 2026 project",
+  "homepage": "https://github.com/Flowrith/Flowrith-primdev-library-app#readme",
+  "bugs": {
+    "url": "https://github.com/Flowrith/Flowrith-primdev-library-app/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Flowrith/Flowrith-primdev-library-app.git"
+  },
+  "license": "ISC",
+  "author": "Flowrith",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+  },
   "dependencies": {
-    "express": "^5.2.1"
+    "@prisma/adapter-pg": "^7.5.0",
+    "@prisma/client": "^6.19.2",
+    "express": "^5.2.1",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "dotenv": "^17.3.1",
+    "prisma": "^6.19.2"
   }
 }
