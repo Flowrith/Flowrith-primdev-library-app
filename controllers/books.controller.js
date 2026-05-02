@@ -1,8 +1,16 @@
-import prisma from '../database.js' // jangan lupa import prisma
+import prisma from '../database.js'
 
+// GET ALL BOOKS
 export const getBooks = async (req, res) => {
-  // Mengambil semua buku dari database menggunakan Prisma Client
-  const books = await prisma.book.findMany()
+  const { includeCategory } = req.query
+
+  const books = await prisma.book.findMany({
+    include: includeCategory === 'true'
+      ? {
+          category: true
+        }
+      : undefined
+  })
 
   res.json({
     success: true,
@@ -11,19 +19,20 @@ export const getBooks = async (req, res) => {
   })
 }
 
+// GET BOOK BY ID
 export const getBookById = async (req, res) => {
-  // Mendapatkan ID buku yang akan diupdate dari parameter URL
-  // Lalu mengubahnya menjadi tipe data integer menggunakan parseInt
   const id = parseInt(req.params.id)
+  const { includeCategory } = req.query
 
-  // Mengambil buku dengan ID yang sesuai dari database menggunakan Prisma Client
   const book = await prisma.book.findUnique({
-    where: {
-      id: id,
-    },
+    where: { id },
+    include: includeCategory === 'true'
+      ? {
+          category: true
+        }
+      : undefined
   })
 
-  // Jika buku tidak ditemukan, kirimkan pesan error
   if (!book) {
     return res.json({
       success: false,
@@ -38,17 +47,41 @@ export const getBookById = async (req, res) => {
   })
 }
 
-export const createBook = async (req, res) => {
-  // Mendapatkan data buku baru dari request body
-  const { title, author, year } = req.body
 
-  // Menambahkan buku baru ke database menggunakan Prisma Client
+// CREATE BOOK
+export const createBook = async (req, res) => {
+  const { title, author, year, categoryId } = req.body
+
+  //  validasi
+  if (!title || !author || !year || !categoryId) {
+    return res.json({
+      success: false,
+      message: 'title, author, year, and categoryId are required'
+    })
+  }
+
+  // cek category ada atau tidak
+  const category = await prisma.categories.findUnique({
+    where: { id: categoryId }
+  })
+
+  if (!category) {
+    return res.json({
+      success: false,
+      message: `Category with ID: ${categoryId} not found`
+    })
+  }
+
   const book = await prisma.book.create({
     data: {
       title,
       author,
       year,
+      categoryId
     },
+    include: {
+      category: true
+    }
   })
 
   res.json({
@@ -58,22 +91,15 @@ export const createBook = async (req, res) => {
   })
 }
 
+// UPDATE BOOK
 export const updateBook = async (req, res) => {
-  // Mendapatkan ID buku yang akan diupdate dari parameter URL
-  // Lalu mengubahnya menjadi tipe data integer menggunakan parseInt
   const id = parseInt(req.params.id)
+  const { title, author, year, categoryId } = req.body
 
-  // Mendapatkan data buku yang akan diupdate dari request body
-  const { title, author, year } = req.body
-
-  // Mencari buku dengan ID yang sesuai di database menggunakan Prisma Client
   const book = await prisma.book.findUnique({
-    where: {
-      id: id,
-    },
+    where: { id }
   })
 
-  // Jika buku tidak ditemukan, kirimkan pesan error
   if (!book) {
     return res.json({
       success: false,
@@ -81,38 +107,34 @@ export const updateBook = async (req, res) => {
     })
   }
 
-  // Mengupdate buku dengan ID yang sesuai di database menggunakan Prisma Client
-  await prisma.book.update({
-    where: {
-      id: id,
-    },
+  const updatedBook = await prisma.book.update({
+    where: { id },
     data: {
       title,
       author,
       year,
+      categoryId
     },
+    include: {
+      category: true
+    }
   })
 
   res.json({
     success: true,
     message: 'Book updated successfully',
-    data: book,
+    data: updatedBook,
   })
 }
 
+// DELETE BOOK
 export const deleteBook = async (req, res) => {
-  // Mendapatkan ID buku yang akan diupdate dari parameter URL
-  // Lalu mengubahnya menjadi tipe data integer menggunakan parseInt
   const id = parseInt(req.params.id)
 
-  // Mencari buku dengan ID yang sesuai di database menggunakan Prisma Client
   const book = await prisma.book.findUnique({
-    where: {
-      id: id,
-    },
+    where: { id }
   })
 
-  // Jika buku tidak ditemukan, kirimkan pesan error
   if (!book) {
     return res.json({
       success: false,
@@ -120,11 +142,8 @@ export const deleteBook = async (req, res) => {
     })
   }
 
-  // Menghapus buku dengan ID yang sesuai di database menggunakan Prisma Client
   await prisma.book.delete({
-    where: {
-      id: id,
-    },
+    where: { id }
   })
 
   res.json({

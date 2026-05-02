@@ -1,27 +1,45 @@
 import prisma from '../database.js'
+import { sha256 } from 'js-sha256'
+import bcrypt from 'bcrypt'
 
+// GET ALL USERS
 export const getUsers = async (req, res) => {
   // Mengambil semua pengguna dari database menggunakan Prisma Client
-  const users = await prisma.users.findMany()
+    const { includeProfile } = req.query
+    const users = await prisma.users.findMany({
+      include: includeProfile === 'true'
+      ? {
+          profiles: true
+        }
+      : undefined
+  })
 
   res.json({
     success: true,
     message: 'Users retrieved successfully',
     data: users,
+    
   })
 }
 
+// GET USER BY ID
 export const getUserById = async (req, res) => {
-  // Mendapatkan ID pengguna yang akan diupdate dari parameter URL
-  // Lalu mengubahnya menjadi tipe data integer menggunakan parseInt
   const id = parseInt(req.params.id)
+  const { includeProfile } = req.query
 
   // Mengambil pengguna dengan ID yang sesuai dari database menggunakan Prisma Client
   const user = await prisma.users.findUnique({
     where: {
       id: id,
     },
+    include: includeProfile === 'true'
+      ? {
+          profiles: true
+        }
+      : undefined
   })
+  
+  
 
   // Jika pengguna tidak ditemukan, kirimkan pesan error
   if (!user) {
@@ -38,15 +56,18 @@ export const getUserById = async (req, res) => {
   })
 }
 
+// CREATE USER
 export const createUser = async (req, res) => {
-  // Mendapatkan data pengguna baru dari request body
-  const { name, email } = req.body
+  const { name, email, password } = req.body
 
-  // Menambahkan pengguna baru ke database menggunakan Prisma Client
+  // Hash password
+   const hashedPassword = await bcrypt.hash(password, 10)
+
   const user = await prisma.users.create({
     data: {
       name,
       email,
+      password: hashedPassword
     },
   })
 
@@ -58,21 +79,14 @@ export const createUser = async (req, res) => {
 }
 
 export const updateUser = async (req, res) => {
-  // Mendapatkan ID pengguna yang akan diupdate dari parameter URL
-  // Lalu mengubahnya menjadi tipe data integer menggunakan parseInt
   const id = parseInt(req.params.id)
-
-  // Mendapatkan data pengguna yang akan diupdate dari request body
-  const { name, email } = req.body
-
-  // Mencari pengguna dengan ID yang sesuai di database menggunakan Prisma Client
+  const { name, email, password } = req.body
   const user = await prisma.users.findUnique({
     where: {
       id: id,
     },
   })
 
-  // Jika pengguna tidak ditemukan, kirimkan pesan error
   if (!user) {
     return res.json({
       success: false,
@@ -88,6 +102,7 @@ export const updateUser = async (req, res) => {
     data: {
       name,
       email,
+      password: password ? await bcrypt.hash(password, 10) : undefined
     },
   })
 
@@ -98,19 +113,15 @@ export const updateUser = async (req, res) => {
   })
 }
 
+
+// DELETE USER
 export const deleteUser = async (req, res) => {
-  // Mendapatkan ID pengguna yang akan dihapus dari parameter URL
-  // Lalu mengubahnya menjadi tipe data integer menggunakan parseInt
   const id = parseInt(req.params.id)
 
-  // Mencari pengguna dengan ID yang sesuai di database menggunakan Prisma Client
   const user = await prisma.users.findUnique({
-    where: {
-      id: id,
-    },
+    where: { id }
   })
 
-  // Jika pengguna tidak ditemukan, kirimkan pesan error
   if (!user) {
     return res.json({
       success: false,
@@ -118,11 +129,14 @@ export const deleteUser = async (req, res) => {
     })
   }
 
-  // Menghapus pengguna dengan ID yang sesuai di database menggunakan Prisma Client
+  // Hapus profile dulu
+  await prisma.profiles.deleteMany({
+    where: { userId: id }
+  })
+
+  // Baru hapus user
   await prisma.users.delete({
-    where: {
-      id: id,
-    },
+    where: { id }
   })
 
   res.json({
