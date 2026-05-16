@@ -1,4 +1,4 @@
-import prisma from '../configs/database.js'
+import prisma from '../database.js'
 
 // GET ALL
 export const getCategories = async (req, res) => {

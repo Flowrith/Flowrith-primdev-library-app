@@ -1,4 +1,4 @@
-import prisma from '../configs/database.js'
+import prisma from '../database.js'
 
 export const getAllBorrowings = async (req, res) => {
   // Mengambil semua peminjaman dari database menggunakan Prisma Client

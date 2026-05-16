@@ -1,4 +1,4 @@
-import prisma from '../configs/database.js'
+import prisma from '../database.js'
 import { sha256 } from 'js-sha256'
 import bcrypt from 'bcrypt'
 
