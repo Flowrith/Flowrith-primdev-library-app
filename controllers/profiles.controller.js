@@ -1,4 +1,4 @@
-import prisma from '../database.js'
+import prisma from '../configs/database.js'
 
 export const getAllProfiles = async (req, res) => {
   const { includeUser } = req.query

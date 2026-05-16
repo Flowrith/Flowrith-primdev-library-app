@@ -3,6 +3,7 @@ import booksRoute from './books.route.js'
 import usersRoute from './users.route.js'
 import categoriesRoute from './category.route.js'
 import profilesRoute from './profile.route.js'
+import borrowingsRoute from './borrowings.route.js'
 
 const router = express.Router()
 
@@ -14,5 +15,5 @@ router.use('/books', booksRoute)
 router.use('/users', usersRoute)
 router.use('/categories', categoriesRoute)
 router.use('/profiles', profilesRoute)
-
+router.use('/borrowings', borrowingsRoute)
 export default router
